@@ -1330,14 +1330,14 @@ function initGlobe(){
         mesh.userData.id=i; mesh.userData.isGold=isGold;
         globeGroup.add(mesh); photoMeshes.push(mesh);
 
-        // FIX: Add a visible, thick red border to identify the 3 special secret cards
+        // SENIOR FIX: Build a clean outer helper layer that handles visibility without corrupting mesh rotation matrices
         if (isGold) {
-            const borderGeo = new THREE.EdgesGeometry(mesh.geometry);
-            const borderMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 4 });
-            const redBorder = new THREE.LineSegments(borderGeo, borderMat);
+            const redBorder = new THREE.BoxHelper(mesh, 0xff0000);
+            redBorder.material.linewidth = 4;
+            globeGroup.add(redBorder);
             
-            // Attach the red border framework directly as a child to the specific mesh card
-            mesh.add(redBorder);
+            // Bind using the identical tracker variable reference read by the render loop below
+            mesh.userData.borderRef = redBorder;
         }
     }
 
@@ -1391,12 +1391,13 @@ function initGlobe(){
         if(mesh.userData.isGold && !foundGold.includes(mesh.userData.id)){
             foundGold.push(mesh.userData.id);
             
-            // FIX: Keep the emissive gentle (0.0) so the actual photo texture remains perfectly visible instead of turning pure white
+            // SENIOR FIX: Completely zero out emissive color channels to strip the canvas texture blowout effect entirely
+            mesh.material.emissive.setHex(0x000000);
             mesh.material.emissiveIntensity = 0.0;
+            mesh.material.needsUpdate = true;
             
-            // Change the border color to a brilliant glowing green or neon pink when found so she knows it's activated!
+            // Switch outline structure color indicator smoothly to brilliant Neon Pink
             if(mesh.userData.borderRef) {
-                mesh.userData.borderRef.setFromObject(mesh);
                 mesh.userData.borderRef.material.color.setHex(0xff44a0); 
             }
             
@@ -1510,11 +1511,15 @@ function initGlobe(){
         if(!globeRevealed) ring.rotation.z+=0.006;
         photoMeshes.forEach(m=>{
             if(m!==state.focused){
-               if(m.userData.borderRef) m.userData.borderRef.update();
-                // No DS glow logic — all photos treated equally
                 m.material.opacity=THREE.MathUtils.lerp(m.material.opacity,globeRevealed?0.82:0,0.06);
+                
+                // SENIOR FIX: Safely calculate bounding matrices so frames move beautifully with globe drag physics
+                if(m.userData.borderRef) {
+                    m.userData.borderRef.update();
+                }
+                
                 if(m.userData.isGold && globeRevealed && !foundGold.includes(m.userData.id)){
-                    // FIX: We rely completely on our bold BoxHelper border line for recognition, keeping the texture face safe from color clipping
+                    // Keep the material face clear of blinding exposure artifacts
                     m.material.emissiveIntensity = 0.0;
                 }
             }
