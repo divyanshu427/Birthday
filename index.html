@@ -1328,6 +1328,16 @@ function initGlobe(){
         mesh.lookAt(0,0,0);
         mesh.userData.id=i; mesh.userData.isGold=isGold;
         globeGroup.add(mesh); photoMeshes.push(mesh);
+
+        // BOLD BORDER FIX: Wraps golden secret photos in a distinct neon frame
+        if (isGold) {
+            const borderFrame = new THREE.BoxHelper(mesh, 0xffd700);
+            borderFrame.material.linewidth = 5; // Forces heavy border rendering weight
+            globeGroup.add(borderFrame);
+            
+            // Ensure the border tracks position movements during globe scatter morphing
+            mesh.userData.borderRef = borderFrame;
+        }
     }
 
     function revealGlobe(){
@@ -1490,9 +1500,7 @@ function initGlobe(){
         if(!globeRevealed) ring.rotation.z+=0.006;
         photoMeshes.forEach(m=>{
             if(m!==state.focused){
-                const t=m.userData.origPos.clone().multiplyScalar(state.scatter);
-                m.position.lerp(t,0.1);
-                m.quaternion.copy(globeGroup.quaternion).invert();
+               if(m.userData.borderRef) m.userData.borderRef.update();
                 // No DS glow logic — all photos treated equally
                 m.material.opacity=THREE.MathUtils.lerp(m.material.opacity,globeRevealed?0.82:0,0.06);
                 if(m.userData.isGold && globeRevealed && !foundGold.includes(m.userData.id)){
