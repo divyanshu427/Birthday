@@ -1266,8 +1266,9 @@ function initGlobe(){
     // Central single photo (appears first)
     const firstMat=new THREE.MeshStandardMaterial({side:THREE.DoubleSide,transparent:true,opacity:0,emissive:new THREE.Color(C.rose),emissiveIntensity:0.8});
     firstMat.map=makeFallback(1);
-    // Load real image using Three.js built-in loader
-    texLoader.load('images/1.jpeg', function(texture) {
+    // Load real image using Three.js built-in loader with explicit relative directory handling
+    texLoader.load('./images/1.jpeg', function(texture) {
+        texture.minFilter = THREE.LinearFilter;
         firstMat.map = texture;
         firstMat.needsUpdate = true;
     });
@@ -1293,20 +1294,20 @@ function initGlobe(){
     // Set placeholder canvas text initially
     mat.map=makeFallback(i);
 
-    // Bypasses Three.js local file security blocks by using a native HTML Image element
-    const localImg = new Image();
-    localImg.src = `images/${i}.jpeg`;
-    localImg.onload = function() {
-        const texture = new THREE.Texture(localImg);
-        texture.minFilter = THREE.LinearFilter;
-        texture.generateMipmaps = false;
-        texture.needsUpdate = true;
-        mat.map = texture;
-        mat.needsUpdate = true;
-    };
-    localImg.onerror = function() {
-        console.error(`Could not locate image asset locally: images/${i}.jpeg`);
-    };
+    // Optimized for Web Servers: Uses Three.js native loader to pull files seamlessly on a live server URL
+    texLoader.load(
+        `./images/${i}.jpeg`, // Explicitly uses './' relative routing to support folder layouts on GitHub Pages
+        function(texture) {
+            texture.minFilter = THREE.LinearFilter;
+            texture.needsUpdate = true;
+            mat.map = texture;
+            mat.needsUpdate = true;
+        },
+        undefined,
+        function(err) {
+            console.error(`Could not locate image asset: ./images/${i}.jpeg`);
+        }
+    );
 
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(1.75,2.35),mat);
         const phi=Math.acos(-1+(2*i)/totalPhotos);
@@ -1579,10 +1580,11 @@ function openGallery(){
         grid.innerHTML = ''; // Wipe out old references
         
         // 2. Loop precisely through your 9 final secret photos
+        // 2. Loop precisely through your 9 final secret photos
         for (let i = 1; i <= 9; i++) {
             const wrap = document.createElement('div');
             wrap.className = 'gallery-img-wrap';
-            wrap.innerHTML = `<img src="images/final${i}.jpeg" alt="Secret Memory" onerror="this.parentElement.style.background='rgba(224,166,170,0.1)'">`;
+            wrap.innerHTML = `<img src="./images/final${i}.jpeg" alt="Secret Memory" onerror="this.parentElement.style.background='rgba(224,166,170,0.1)'">`;
             grid.appendChild(wrap);
         }
 
