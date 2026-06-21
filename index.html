@@ -838,6 +838,7 @@ function openGate3(){
         typeWriter(document.getElementById('type3'),'And so we mounted our bicycles — each with our own, yet together as one. The gate swung wide open. The road ahead glittered with starlight. We pedaled into forever, hand in hand, the wind carrying the sound of our laughter. This is our story. And it is only just beginning.',26,()=>{
             triggerPetalBurst();
             
+            // Displays the romantic letter section underneath Gate 3
             const ls=document.getElementById('section-letter');
             ls.style.display='flex'; ls.style.flexDirection='column'; ls.style.alignItems='center';
             const letterTxt=`My dearest Sarika,
@@ -854,6 +855,7 @@ I promise to be the hand you reach for in the dark. To be your bicycle companion
             document.getElementById('letter-body').innerText=letterTxt;
             setTimeout(()=>document.getElementById('romantic-letter').classList.add('show'),100);
             
+            // Smoothly moves the layout focus directly down to the text wrapper
             setTimeout(()=>smoothScrollTo(ls),300);
 
             setTimeout(()=>{
@@ -1096,7 +1098,7 @@ function initGlobe(){
         const orig=m.userData.origPos.clone().multiplyScalar(state.scatter||1);
         gsap.to(m.position,{x:orig.x,y:orig.y,z:orig.z,duration:0.75});
         gsap.to(m.scale,{x:1,y:1,duration:0.75});
-        setTimeout(() => { if(!state.focused) m.lookAt(m.userData.origPos); }, 760);
+        
     }
 
     function triggerSuperBloom(){
@@ -1181,8 +1183,14 @@ function initGlobe(){
 
         photoMeshes.forEach(m => {
             if(m !== state.focused){
+                // 1. Maintain smooth 3D sphere position layouts and scattering logic
                 const t = m.userData.origPos.clone().multiplyScalar(state.scatter);
                 m.position.lerp(t, 0.1);
+                
+                // 2. SENIOR FIX: Extract the inverse quaternion from the rotating parent group.
+                // This keeps them in a perfect 3D sphere shape but forces every card to face the camera completely upright!
+                m.quaternion.copy(globeGroup.quaternion).invert();
+                
                 m.material.opacity = THREE.MathUtils.lerp(m.material.opacity, globeRevealed ? 0.82 : 0, 0.06);
                 if(m.userData.isGold && globeRevealed && !foundGold.includes(m.userData.id)){
                     m.material.emissiveIntensity = 0.0;
