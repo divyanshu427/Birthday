@@ -1389,7 +1389,16 @@ function initGlobe(){
 
         if(mesh.userData.isGold && !foundGold.includes(mesh.userData.id)){
             foundGold.push(mesh.userData.id);
-            mesh.material.emissiveIntensity=3;
+            
+            // FIX: Keep the emissive gentle (0.0) so the actual photo texture remains perfectly visible instead of turning pure white
+            mesh.material.emissiveIntensity = 0.0;
+            
+            // Change the border color to a brilliant glowing green or neon pink when found so she knows it's activated!
+            if(mesh.userData.borderRef) {
+                mesh.userData.borderRef.setFromObject(mesh);
+                mesh.userData.borderRef.material.color.setHex(0xff44a0); 
+            }
+            
             playMagic(); triggerPetalBurst(20);
             if(foundGold.length===3) triggerSuperBloom();
         }
@@ -1504,7 +1513,8 @@ function initGlobe(){
                 // No DS glow logic — all photos treated equally
                 m.material.opacity=THREE.MathUtils.lerp(m.material.opacity,globeRevealed?0.82:0,0.06);
                 if(m.userData.isGold && globeRevealed && !foundGold.includes(m.userData.id)){
-                    m.material.emissiveIntensity=THREE.MathUtils.lerp(m.material.emissiveIntensity,0.6+0.3*Math.sin(Date.now()*0.004),0.08);
+                    // FIX: We rely completely on our bold BoxHelper border line for recognition, keeping the texture face safe from color clipping
+                    m.material.emissiveIntensity = 0.0;
                 }
             }
         });
