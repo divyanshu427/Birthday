@@ -1294,7 +1294,8 @@ function initGlobe(){
         side:THREE.DoubleSide,
         transparent:true,
         opacity:0,
-        emissive:isGold?new THREE.Color(C.rose):new THREE.Color(0x000000),
+        // FIX: Force emissive to pitch black so it NEVER blows out the card into a white block
+        emissive: new THREE.Color(0x000000),
         emissiveIntensity:0
     });
     
@@ -1329,14 +1330,14 @@ function initGlobe(){
         mesh.userData.id=i; mesh.userData.isGold=isGold;
         globeGroup.add(mesh); photoMeshes.push(mesh);
 
-        // BOLD BORDER FIX: Wraps golden secret photos in a distinct neon frame
+        // FIX: Add a visible, thick red border to identify the 3 special secret cards
         if (isGold) {
-            const borderFrame = new THREE.BoxHelper(mesh, 0xffd700);
-            borderFrame.material.linewidth = 5; // Forces heavy border rendering weight
-            globeGroup.add(borderFrame);
+            const borderGeo = new THREE.EdgesGeometry(mesh.geometry);
+            const borderMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 4 });
+            const redBorder = new THREE.LineSegments(borderGeo, borderMat);
             
-            // Ensure the border tracks position movements during globe scatter morphing
-            mesh.userData.borderRef = borderFrame;
+            // Attach the red border framework directly as a child to the specific mesh card
+            mesh.add(redBorder);
         }
     }
 
