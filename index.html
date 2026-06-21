@@ -1332,12 +1332,12 @@ function initGlobe(){
 
         // SENIOR FIX: Build a clean outer helper layer that handles visibility without corrupting mesh rotation matrices
         // SENIOR FIX: Add a native local outline frame that rotates naturally with the 3D globe mesh
+        // Setup local outline boundaries that move uniformly along with the mesh parents
         if (isGold) {
             const borderGeo = new THREE.EdgesGeometry(mesh.geometry);
             const borderMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 5 });
             const redOutline = new THREE.LineSegments(borderGeo, borderMat);
             
-            // Adding it directly to the mesh ensures it moves and spins perfectly in 3D space
             mesh.add(redOutline);
             mesh.userData.borderRef = redOutline;
         }
@@ -1513,10 +1513,14 @@ function initGlobe(){
         if(!globeRevealed) ring.rotation.z+=0.006;
         photoMeshes.forEach(m=>{
             if(m!==state.focused){
-                // Restores the original dynamic 3D scattering and rotation vectors cleanly
-                const t=m.userData.origPos.clone().multiplyScalar(state.scatter);
-                m.position.lerp(t,0.1);
-                m.quaternion.copy(globeGroup.quaternion).invert();
+                // Smoothly calculate interpolation using the baseline sphere geometry positions
+                const t = m.userData.origPos.clone().multiplyScalar(state.scatter);
+                m.position.lerp(t, 0.1);
+                
+                // SENIOR FIX: Force objects to face the active camera viewpoint globally without destroying sphere depth geometry
+                const worldPos = new THREE.Vector3();
+                m.getWorldPosition(worldPos);
+                m.lookAt(camera.position);
                 
                 m.material.opacity=THREE.MathUtils.lerp(m.material.opacity,globeRevealed?0.82:0,0.06);
                 if(m.userData.isGold && globeRevealed && !foundGold.includes(m.userData.id)){
