@@ -568,6 +568,22 @@ body {
 @keyframes cloudDrift { 0%{transform:translateX(-120%)} 100%{transform:translateX(120vw)} }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 .sprite-canvas { display:block; }
+/* Hard structural style locks to avoid unstyled flickering on page refresh */
+#phase-road, 
+#phase-globe, 
+#phase-gallery, 
+#memory-counter, 
+#progress-track, 
+#section-letter {
+    display: none !important;
+}
+
+/* Let JavaScript override the hard locks cleanly using these specific runtime utility classes */
+body.road-active #phase-road { display: block !important; }
+body.road-active #memory-counter { display: block !important; }
+body.road-active #progress-track { display: flex !important; }
+body.globe-active #phase-globe { display: block !important; }
+body.gallery-active #phase-gallery { display: flex !important; }
 </style>
 </head>
 <body>
@@ -867,9 +883,7 @@ document.getElementById('start-journey-btn').addEventListener('click',()=>{
    ROAD PHASE
 ═══════════════════════════════════════════════════════ */
 function startRoadPhase(){
-    document.getElementById('phase-road').style.display='block';
-    document.getElementById('memory-counter').style.display='block';
-    document.getElementById('progress-track').style.display='flex';
+    document.body.classList.add('road-active');
     setupFairyLights(); setupRoadPetals(); setupSkyScroll();
     spawnParallaxClouds(); setupParallax();
     setupGate1(); setupGate2(); setupGate3();
@@ -1003,7 +1017,7 @@ function drawBoy(cvs){
     ctx.beginPath(); ctx.moveTo(cx-10,cy+36); ctx.lineTo(cx-22,cy+50); ctx.lineWidth=4; ctx.strokeStyle=skin; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(cx+10,cy+36); ctx.lineTo(cx+22,cy+50); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(cx-6,cy+56); ctx.lineTo(cx-8,cy+72); ctx.lineWidth=5; ctx.strokeStyle='#2c4a6e'; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx+6,cy+56); ctx.lineTo(cx+8,cy+72); stroke();
+    ctx.beginPath(); ctx.moveTo(cx+6,cy+56); ctx.lineTo(cx+8,cy+72); ctx.stroke();
 }
 function drawBicycle(ctx,x,y,s=1){
     ctx.strokeStyle='#c8a96e'; ctx.lineWidth=2.5*s;
@@ -1181,8 +1195,8 @@ I promise to be the hand you reach for in the dark. To be your bicycle companion
 function transitionToGlobe(){
     playMagic();
     gsap.to('#phase-road',{opacity:0,duration:1.5,onComplete:()=>{
-        document.getElementById('phase-road').style.display='none';
-        document.getElementById('phase-globe').style.display='block';
+        document.body.classList.remove('road-active');
+        document.body.classList.add('globe-active');
         document.getElementById('hud').style.opacity='1';
         document.body.style.overflow='hidden';
         document.body.style.touchAction='none';
@@ -1317,12 +1331,22 @@ function initGlobe(){
         globeGroup.add(mesh); photoMeshes.push(mesh);
 
         // SENIOR FIX: Build a clean structural border frame as a child component inside the photo plane mesh coordinates
+        // 5X BOLD BORDER FIX: Employs a physical 3D backing plane to bypass WebGL line rendering width limits
         if (isGold) {
-            const borderGeo = new THREE.EdgesGeometry(mesh.geometry);
-            const borderMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 6 });
-            const redOutline = new THREE.LineSegments(borderGeo, borderMat);
-            mesh.add(redOutline);
-            mesh.userData.borderRef = redOutline;
+            // Photo dimensions are 1.75 x 2.35. A geometry size of 2.15 x 2.75 guarantees a thick 0.4 outline frame on all sides.
+            const boldFrameGeo = new THREE.BoxGeometry(2.15, 2.75, 0.02); 
+            const boldFrameMat = new THREE.MeshBasicMaterial({ 
+                color: 0xff0000, 
+                side: THREE.BackSide 
+            });
+            const boldBacking = new THREE.Mesh(boldFrameGeo, boldFrameMat);
+            
+            // Align slightly backward in Z-space to clear graphic clipping anomalies
+            boldBacking.position.z = -0.01; 
+            mesh.add(boldBacking);
+            
+            // Retain absolute state tracker mapping variable for neon pink dynamic shift on touch click engagement
+            mesh.userData.borderRef = boldBacking;
         }
     }
 
@@ -1579,6 +1603,10 @@ function checkPassword(){
 ═══════════════════════════════════════════════════════ */
 function openGallery(){
     gsap.to('#phase-globe',{opacity:0,duration:1.2,onComplete:()=>{
+        // Cleanly switch state tracking class locks on the body root element
+        document.body.classList.remove('globe-active');
+        document.body.classList.add('gallery-active');
+        
         document.getElementById('phase-globe').style.display='none';
         const g=document.getElementById('phase-gallery');
         const grid = document.getElementById('gallery-grid');
