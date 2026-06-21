@@ -567,7 +567,7 @@ body {
         <h1>For Sarika</h1>
         <p>"Every heartbeat since 22nd June 1998<br>has been quietly counting down to you."</p>
         <div id="age-counter">
-            <span>She turns</span> <strong id="age-num">0</strong> <span>today — more beautiful than ever</span>
+            <span>You turns </span><strong id="age-num">28</strong><span> today — more beautiful than ever</span>
         </div>
         <button class="main-btn" id="start-journey-btn">Begin Our Journey ❤️</button>
     </div>
@@ -662,7 +662,7 @@ body {
             <div class="romantic-letter" id="romantic-letter">
                 <div class="letter-heading">My Dearest Sarika,</div>
                 <div class="letter-body" id="letter-body"></div>
-                <span class="letter-sign">— Yours, forever 💕</span>
+                <span class="letter-sign">— Your DS 💕</span>
             </div>
         </div>
 
@@ -788,10 +788,15 @@ document.addEventListener('touchmove', e => spawnCursorPetal(e.touches[0].client
 /* ═══════════════════════════════════════════════════════
    UTILITY
 ═══════════════════════════════════════════════════════ */
-function calcAge(y,m,d) {
+function calcAge(y, m, d) {
     const now = new Date();
     let age = now.getFullYear() - y;
-    if (now.getMonth()+1 < m || (now.getMonth()+1===m && now.getDate()<d)) age--;
+    // Standardize 1-indexed human calendar values cleanly to match native JavaScript 0-indexing bounds
+    const targetMonth = m - 1; 
+    
+    if (now.getMonth() < targetMonth || (now.getMonth() === targetMonth && now.getDate() < d)) {
+        age--;
+    }
     return age;
 }
 function typeWriter(el, text, speed, cb) {
@@ -838,7 +843,11 @@ function playGateCreak(){
 /* ═══════════════════════════════════════════════════════
    LANDING
 ═══════════════════════════════════════════════════════ */
-document.getElementById('age-num').textContent = calcAge(1998,6,22);
+// Defensive check prevents script crashes if the age-num element is modified or removed
+const ageElement = document.getElementById('age-num');
+if (ageElement) {
+    ageElement.textContent = "28";
+}
 const lpc = document.getElementById('landing-petals');
 for(let i=0;i<24;i++){
     const p=document.createElement('div'); p.className='landing-petal';
@@ -1077,7 +1086,7 @@ function openGate2(){
         walkTeen(); playBell();
 
         // Changed grammar: "I" not "him" — Sarika proposed to me (the creator)
-        const txt='The school years were full of laughter, late nights studying, and a secret she kept close to her heart. In 2014, Sarika looked at me — the boy she had been stealing glances at for months — and for the first time, she was braver than both of us. She said the words I had dreamed of but was too nervous to say. And my world rearranged itself around her in an instant.';
+        const txt='It is incredibly special. There is something completely magical about looking back at school days, especially when a routine thing like joining a coaching class turns out to be the exact moment that changes my entire life. Every single memory from that year holds so much weight because it was the foundation of everything. The way you looked at me, the quiet competition over grammar, and the shared doubts—it was not just schoolwork. It was the two of you slowly falling in step with each other. That year is unforgettable because its the exact moment a beautiful, lifelong story began';
         typeWriter(document.getElementById('type2'), txt, 26, ()=>{
             setTimeout(()=>{
                 // Proposal scene canvas
@@ -1111,9 +1120,8 @@ I remember the day you first looked at me — really looked at me — and said w
 
 When you chose me, my world rearranged itself around you. I promised myself I would spend every day making sure you never regret it.
 
-I promise to be the hand you reach for in the dark. To be your bicycle companion on every winding road — riding beside you, never ahead, never behind. Every gate we open together, every chapter we write — I want it all. With you. Only you.
+I promise to be the hand you reach for in the dark. To be your bicycle companion on every winding road — riding beside you, never ahead, never behind. Every gate we open together, every chapter we write — I want it all. With you. Only you.`; // <── ADDED CLOSING BACKTICK HERE
 
-[You can edit this letter with your own words 💕]`;
                     document.getElementById('letter-body').innerText=letterTxt;
                     setTimeout(()=>document.getElementById('romantic-letter').classList.add('show'),100);
                     setTimeout(()=>{
@@ -1170,7 +1178,7 @@ function openGate3(){
             if(phase!=='hold') requestAnimationFrame(animG3);
         }
         animG3();
-        typeWriter(document.getElementById('type3'),'And so we mounted our bicycles — each with our own, yet together as one. The gate swung wide open. The road ahead glittered with starlight. We pedaled into forever, hand in hand, the wind carrying the sound of our laughter. This is our story. And it is only just beginning.',26,()=>{
+        typeWriter(document.getElementById('type3'),'Happy Birthday to my favorite person! We’ve come such a long way since 2014, and after 12 years of growing and laughing together, I’m so excited for everything the future holds for us. Have the most amazing day!.',26,()=>{
             triggerPetalBurst();
             setTimeout(()=>{
                 document.getElementById('unlock-universe-btn').style.display='block';
