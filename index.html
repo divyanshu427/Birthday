@@ -800,7 +800,8 @@ function typeWriter(el, text, speed, cb) {
     tick();
 }
 function smoothScrollTo(el) {
-    document.getElementById('phase-road').scrollTo({top:el.offsetTop-50, behavior:'smooth'});
+    // Force browser engine layout engine alignment directly onto the element container box
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 function triggerPetalBurst(count=30) {
     for(let i=0;i<count;i++) setTimeout(()=>{
@@ -1043,9 +1044,13 @@ function openGate1(){
         walkBaby();
         playChime();
         typeWriter(document.getElementById('type1'),'On 22nd June 1998, a tiny miracle entered the world. A baby girl with the brightest eyes and the loudest laugh — as if she already knew she had so much joy to give. The world would never be the same again. She was Sarika.',30);
-        btn.textContent='✓ Opened'; smoothScrollTo(story);
+        btn.textContent='✓ Opened'; 
+        
+        // FIX: Scroll to the entire section wrapper instead of just the inner story card
+        smoothScrollTo(document.getElementById('section-gate1'));
     },900);
 }
+
 
 /* ═══════════════════════════════════════════════════════
    GATE 2
@@ -1119,7 +1124,8 @@ I promise to be the hand you reach for in the dark. To be your bicycle companion
                 },2000);
             },600);
         });
-        btn.textContent='✓ Opened'; smoothScrollTo(story);
+        btn.textContent='✓ Opened'; 
+        smoothScrollTo(document.getElementById('section-gate2'));
     },900);
 }
 
@@ -1172,7 +1178,8 @@ function openGate3(){
                 playMagic();
             },500);
         });
-        btn.textContent='✓ Opened'; smoothScrollTo(story);
+        btn.textContent='✓ Opened'; 
+        smoothScrollTo(document.getElementById('section-gate3'));
     },900);
 }
 
