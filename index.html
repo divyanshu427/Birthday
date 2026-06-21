@@ -1331,13 +1331,15 @@ function initGlobe(){
         globeGroup.add(mesh); photoMeshes.push(mesh);
 
         // SENIOR FIX: Build a clean outer helper layer that handles visibility without corrupting mesh rotation matrices
+        // SENIOR FIX: Add a native local outline frame that rotates naturally with the 3D globe mesh
         if (isGold) {
-            const redBorder = new THREE.BoxHelper(mesh, 0xff0000);
-            redBorder.material.linewidth = 4;
-            globeGroup.add(redBorder);
+            const borderGeo = new THREE.EdgesGeometry(mesh.geometry);
+            const borderMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 5 });
+            const redOutline = new THREE.LineSegments(borderGeo, borderMat);
             
-            // Bind using the identical tracker variable reference read by the render loop below
-            mesh.userData.borderRef = redBorder;
+            // Adding it directly to the mesh ensures it moves and spins perfectly in 3D space
+            mesh.add(redOutline);
+            mesh.userData.borderRef = redOutline;
         }
     }
 
@@ -1391,12 +1393,12 @@ function initGlobe(){
         if(mesh.userData.isGold && !foundGold.includes(mesh.userData.id)){
             foundGold.push(mesh.userData.id);
             
-            // SENIOR FIX: Completely zero out emissive color channels to strip the canvas texture blowout effect entirely
+            // Strip the canvas text blowout completely
             mesh.material.emissive.setHex(0x000000);
             mesh.material.emissiveIntensity = 0.0;
             mesh.material.needsUpdate = true;
             
-            // Switch outline structure color indicator smoothly to brilliant Neon Pink
+            // Seamlessly updates the border to neon pink when clicked
             if(mesh.userData.borderRef) {
                 mesh.userData.borderRef.material.color.setHex(0xff44a0); 
             }
@@ -1511,15 +1513,13 @@ function initGlobe(){
         if(!globeRevealed) ring.rotation.z+=0.006;
         photoMeshes.forEach(m=>{
             if(m!==state.focused){
+                // Restores the original dynamic 3D scattering and rotation vectors cleanly
+                const t=m.userData.origPos.clone().multiplyScalar(state.scatter);
+                m.position.lerp(t,0.1);
+                m.quaternion.copy(globeGroup.quaternion).invert();
+                
                 m.material.opacity=THREE.MathUtils.lerp(m.material.opacity,globeRevealed?0.82:0,0.06);
-                
-                // SENIOR FIX: Safely calculate bounding matrices so frames move beautifully with globe drag physics
-                if(m.userData.borderRef) {
-                    m.userData.borderRef.update();
-                }
-                
                 if(m.userData.isGold && globeRevealed && !foundGold.includes(m.userData.id)){
-                    // Keep the material face clear of blinding exposure artifacts
                     m.material.emissiveIntensity = 0.0;
                 }
             }
