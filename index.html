@@ -1545,8 +1545,8 @@ window.addEventListener('resize',()=>{ camera.aspect=window.innerWidth/window.in
 document.getElementById('vault-input').addEventListener('keyup',e=>{ if(e.key==='Enter') checkPassword(); });
 document.getElementById('vault-submit').addEventListener('click',checkPassword);
 function checkPassword(){
-const val=document.getElementById('vault-input').value.trim().toUpperCase();
-if(val===SECRET_PASSWORD){
+const val = document.getElementById('vault-input').value.trim().toUpperCase();
+if(val === '2BWM' || val === 'SAR-2698-DS'){
 playMagic(); triggerPetalBurst();
 document.getElementById('vault-prompt').style.display='none';
 openGallery();
